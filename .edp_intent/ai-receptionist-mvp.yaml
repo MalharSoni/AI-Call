@@ -1,0 +1,123 @@
+version: "1.0.0"
+generatedBy: "edp-6-mcp"
+timestamp: "2025-01-05T00:00:00Z"
+originalIntent: "Create the AI-Call receptionist system as specified in the PRD - an AI receptionist that can be set up in under 60 seconds from a business URL, answers FAQs, texts booking links, and warm-transfers live callers to the business phone."
+scope:
+  allowedPaths:
+    - "/apps/server/**"
+    - "/apps/web/**"
+    - "/apps/ingest/**"
+    - "/packages/telephony/**"
+    - "/packages/ai/**"
+    - "/packages/kb/**"
+    - "/infra/**"
+    - "package.json"
+    - "tsconfig.json"
+    - ".env.example"
+  forbiddenPaths:
+    - "/.git/**"
+    - "/node_modules/**"
+    - "/.mcp.json"
+  newFiles:
+    - "/apps/server/src/twilioWebhook.ts"
+    - "/apps/server/src/wsStream.ts"
+    - "/packages/telephony/src/transfer.ts"
+    - "/packages/ai/src/receptionist.ts"
+    - "/packages/kb/src/retrieve.ts"
+    - "/apps/ingest/src/crawl.ts"
+    - "/apps/web/pages/index.tsx"
+    - "/infra/supabase/migrations/001_initial.sql"
+apiContracts:
+  - name: "handleIncomingCall"
+    type: "function"
+    params:
+      - name: "callSid"
+        type: "string"
+      - name: "from"
+        type: "string"
+    returns: "TwiML"
+    required: true
+  - name: "handleWebSocketStream"
+    type: "function"
+    params:
+      - name: "ws"
+        type: "WebSocket"
+      - name: "businessId"
+        type: "string"
+    returns: "void"
+    required: true
+  - name: "crawlWebsite"
+    type: "function"
+    params:
+      - name: "url"
+        type: "string"
+      - name: "depth"
+        type: "number"
+    returns: "AgentCard"
+    required: true
+  - name: "searchKnowledgeBase"
+    type: "function"
+    params:
+      - name: "query"
+        type: "string"
+      - name: "businessId"
+        type: "string"
+    returns: "Snippet[]"
+    required: true
+  - name: "sendSMS"
+    type: "function"
+    params:
+      - name: "to"
+        type: "string"
+      - name: "message"
+        type: "string"
+    returns: "SMSStatus"
+    required: true
+  - name: "warmTransfer"
+    type: "function"
+    params:
+      - name: "callSid"
+        type: "string"
+      - name: "toNumber"
+        type: "string"
+      - name: "whisper"
+        type: "string"
+    returns: "TransferStatus"
+    required: true
+acceptanceCriteria:
+  - id: "AC-001"
+    description: "Business setup from URL completes in under 60 seconds"
+    given: "A valid business website URL"
+    when: "User initiates setup"
+    then: "Agent Card and FAQs are generated within 60 seconds"
+  - id: "AC-002"
+    description: "Voice conversation maintains sub-700ms latency"
+    given: "An active phone call"
+    when: "User speaks to the AI"
+    then: "Response begins within 700ms"
+  - id: "AC-003"
+    description: "FAQ answering uses website content"
+    given: "Caller asks a question covered on website"
+    when: "AI processes the query"
+    then: "Response uses actual website content with source attribution"
+  - id: "AC-004"
+    description: "SMS with booking link is sent successfully"
+    given: "Caller requests booking"
+    when: "AI offers and caller accepts SMS option"
+    then: "SMS with booking URL is delivered"
+  - id: "AC-005"
+    description: "Warm transfer includes context whisper"
+    given: "Caller needs to speak with staff"
+    when: "Transfer is initiated"
+    then: "Staff hears whisper context before connection"
+nonGoals:
+  - "Calendar or EMR system integration"
+  - "Payment processing"
+  - "Multi-agent orchestration"
+  - "Direct booking without SMS link"
+  - "Complex IVR menu systems"
+complexityBudget:
+  maxNewFunctions: 25
+  maxNewFiles: 30
+  maxLinesOfCode: 3000
+  maxDependencies: 15
