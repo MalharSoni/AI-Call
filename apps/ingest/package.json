@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-call/kb": "workspace:*",
+    "@ai-call/kb": "*",
     "playwright": "^1.40.0",
     "crypto": "^1.0.1"
   },

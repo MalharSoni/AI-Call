@@ -24,7 +24,7 @@ export default function Home() {
       } else {
         setMessage('Setup failed. Please try again.');
       }
-    } catch (error) {
+    } catch {
       setMessage('An error occurred. Please try again.');
     } finally {
       setLoading(false);

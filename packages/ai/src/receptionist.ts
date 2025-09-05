@@ -1,12 +1,12 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import type { ConversationContext } from './types';
 
 export class ReceptionistPolicy {
-  private anthropic: Anthropic;
+  private openai: OpenAI;
   private systemPrompt: string;
   
   constructor(apiKey: string, businessName: string) {
-    this.anthropic = new Anthropic({ apiKey });
+    this.openai = new OpenAI({ apiKey });
     this.systemPrompt = `You are Receptionist-Pro for ${businessName}.
 Use only the provided knowledge base snippets with source URLs.
 If unsure, say you can text the official link or transfer to staff.
@@ -24,19 +24,20 @@ Tools: search_kb(query), send_sms(number,text), transfer(reason).`;
       .join('\n\n');
     
     const messages = [
-      ...context.conversationHistory,
+      { role: 'system' as const, content: `${this.systemPrompt}\n\nKnowledge Base:\n${knowledgeContext}` },
+      ...context.conversationHistory.map(msg => ({
+        role: msg.role === 'assistant' ? 'assistant' as const : 'user' as const,
+        content: msg.content
+      })),
       { role: 'user' as const, content: userInput }
     ];
     
-    const response = await this.anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4',
       max_tokens: 150,
-      system: `${this.systemPrompt}\n\nKnowledge Base:\n${knowledgeContext}`,
       messages
     });
     
-    return response.content[0].type === 'text' 
-      ? response.content[0].text 
-      : '';
+    return response.choices[0]?.message?.content || '';
   }
 }

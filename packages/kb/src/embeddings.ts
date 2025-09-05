@@ -12,5 +12,10 @@ export async function generateEmbedding(
     inputType: 'search_query'
   });
   
-  return response.embeddings[0];
+  const embeddings = response.embeddings;
+  if (Array.isArray(embeddings) && embeddings.length > 0) {
+    return embeddings[0] as number[];
+  }
+  
+  throw new Error('No embeddings returned from Cohere API');
 }

@@ -32,7 +32,7 @@ export function handleWebSocketConnection(ws: WebSocket) {
           sttAdapter: new STTAdapter(),
           ttsAdapter: new TTSAdapter(ws, message.streamSid),
           receptionistPolicy: new ReceptionistPolicy(
-            process.env.ANTHROPIC_API_KEY || '',
+            process.env.OPENAI_API_KEY || '',
             'AI Receptionist'
           )
         };

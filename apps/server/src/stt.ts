@@ -1,44 +1,63 @@
 import { EventEmitter } from 'events';
-import * as sdk from 'azure-cognitiveservices-speech-sdk';
+import OpenAI from 'openai';
 
 export class STTAdapter extends EventEmitter {
-  private pushStream: sdk.PushAudioInputStream;
-  private recognizer: sdk.SpeechRecognizer;
+  private openai: OpenAI;
+  private audioBuffer: Buffer[] = [];
+  private isProcessing = false;
   
   constructor() {
     super();
     
-    const speechConfig = sdk.SpeechConfig.fromSubscription(
-      process.env.AZURE_SPEECH_KEY || '',
-      process.env.AZURE_SPEECH_REGION || 'eastus'
-    );
-    
-    this.pushStream = sdk.AudioInputStream.createPushStream();
-    const audioConfig = sdk.AudioConfig.fromStreamInput(this.pushStream);
-    
-    this.recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
-    
-    this.recognizer.recognizing = (s, e) => {
-      if (e.result.text) {
-        this.emit('partial', e.result.text);
-      }
-    };
-    
-    this.recognizer.recognized = (s, e) => {
-      if (e.result.text) {
-        this.emit('transcript', e.result.text);
-      }
-    };
-    
-    this.recognizer.startContinuousRecognitionAsync();
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || ''
+    });
   }
   
   processAudio(audioBuffer: Buffer) {
-    this.pushStream.write(audioBuffer);
+    this.audioBuffer.push(audioBuffer);
+    
+    // Process audio in chunks to maintain low latency
+    if (!this.isProcessing && this.audioBuffer.length > 0) {
+      this.processBufferedAudio();
+    }
+  }
+  
+  private async processBufferedAudio() {
+    if (this.audioBuffer.length === 0) return;
+    
+    this.isProcessing = true;
+    
+    try {
+      // Combine buffered audio
+      const combinedBuffer = Buffer.concat(this.audioBuffer);
+      this.audioBuffer = [];
+      
+      // Create a temporary file for OpenAI Whisper
+      const audioFile = new File([combinedBuffer], 'audio.wav', { type: 'audio/wav' });
+      
+      const transcription = await this.openai.audio.transcriptions.create({
+        file: audioFile,
+        model: 'whisper-1',
+      });
+      
+      if (transcription.text) {
+        this.emit('transcript', transcription.text);
+      }
+    } catch (error) {
+      console.error('STT error:', error);
+    } finally {
+      this.isProcessing = false;
+      
+      // Process any new audio that arrived while processing
+      if (this.audioBuffer.length > 0) {
+        setTimeout(() => this.processBufferedAudio(), 100);
+      }
+    }
   }
   
   stop() {
-    this.recognizer.stopContinuousRecognitionAsync();
-    this.pushStream.close();
+    this.audioBuffer = [];
+    this.isProcessing = false;
   }
 }

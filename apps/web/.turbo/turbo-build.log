@@ -1,0 +1,30 @@
+
+> @ai-call/web@1.0.0 build
+> next build
+
+   Linting and checking validity of types ...
+
+ ⚠ The Next.js plugin was not detected in your ESLint configuration. See https://nextjs.org/docs/basic-features/eslint#migrating-existing-config
+   ▲ Next.js 14.0.4
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Collecting page data ...
+   Generating static pages (0/3) ...
+ ✓ Generating static pages (3/3) 
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (pages)                              Size     First Load JS
+┌ ○ /                                      1.1 kB         78.8 kB
+├ ○ /404                                   182 B          77.9 kB
+└ λ /api/setup                             0 B            77.7 kB
++ First Load JS shared by all              77.7 kB
+  ├ chunks/framework-5ee0695469d657e9.js   45.2 kB
+  ├ chunks/main-6ea68c4a8a2bba22.js        31.6 kB
+  ├ chunks/pages/_app-242856cd295206b2.js  195 B
+  └ chunks/webpack-4e7214a60fad8e88.js     712 B
+
+○  (Static)   prerendered as static content
+λ  (Dynamic)  server-rendered on demand using Node.js
+
